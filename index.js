@@ -21,10 +21,22 @@ async function run() {
     const reviewsCollection = client
       .db("baiku-manufacture")
       .collection("reviews");
+    const productsCollection = client
+      .db("baiku-manufacture")
+      .collection("products");
 
+    //  getting all client reviews
     app.get("/reviews", async (req, res) => {
       const query = {};
       const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // getting all products
+
+    app.get("/products", async (req, res) => {
+      const query = {};
+      const result = await productsCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -37,9 +49,9 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello From Baiku Server");
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`Baiku app listening on port ${port}`);
 });
