@@ -9,17 +9,32 @@ app.use(cors());
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ilere.mongodb.net/?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverApi: ServerApiVersion.v1,
-});
-client.connect((err) => {
-  const collection = client.db("test").collection("devices");
-  // perform actions on the collection object
-  //   client.close();
-  console.log("database connected");
-});
+
+// Create a new MongoClient
+const client = new MongoClient(uri);
+
+async function run() {
+  try {
+    // Connect the client to the server
+    await client.connect();
+    // Establish and verify connection
+    const reviewsCollection = client
+      .db("baiku-manufacture")
+      .collection("reviews");
+
+    app.get("/reviews", async (req, res) => {
+      const query = {};
+      const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    console.log("Connected successfully to server");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
+  }
+}
+run().catch(console.dir);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
