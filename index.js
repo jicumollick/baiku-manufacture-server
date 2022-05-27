@@ -60,17 +60,35 @@ async function run() {
       res.send(users);
     });
 
+    // Get the Admin
+
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await usersCollection.findOne({ email });
+      const isAdmin = user.role === "admin";
+      console.log(isAdmin);
+      res.send(isAdmin);
+    });
+
     // Making user a Admin
 
     app.put("/user/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const filter = { email };
-      const updatedDoc = {
-        $set: { role: "admin" },
-      };
-      const result = await usersCollection.updateOne(filter, updatedDoc);
+      const requester = req.decoded.email;
+      const requesterAccount = await usersCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        const filter = { email };
+        const updatedDoc = {
+          $set: { role: "admin" },
+        };
+        const result = await usersCollection.updateOne(filter, updatedDoc);
 
-      res.send(result);
+        res.send(result);
+      } else {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
     });
 
     // add a user
