@@ -52,6 +52,27 @@ async function run() {
         }
       );
     }
+
+    // get all users
+
+    app.get("/users", verifyJWT, async (req, res) => {
+      const users = await usersCollection.find().toArray();
+      res.send(users);
+    });
+
+    // Making user a Admin
+
+    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email };
+      const updatedDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await usersCollection.updateOne(filter, updatedDoc);
+
+      res.send(result);
+    });
+
     // add a user
 
     app.put("/user/:email", async (req, res) => {
