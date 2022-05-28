@@ -53,10 +53,31 @@ async function run() {
       );
     }
 
+    // Updating a user
+
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+
+      res.send(result);
+    });
+
     // get all users
 
     app.get("/users", verifyJWT, async (req, res) => {
       const users = await usersCollection.find().toArray();
+
       res.send(users);
     });
 
@@ -154,6 +175,14 @@ async function run() {
     app.get("/reviews", async (req, res) => {
       const query = {};
       const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // Add A single Product
+    app.post("/product", async (req, res) => {
+      const product = req.body;
+      console.log(product);
+      const result = await productsCollection.insertOne(product);
       res.send(result);
     });
 
