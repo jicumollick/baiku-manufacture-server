@@ -53,6 +53,15 @@ async function run() {
       );
     }
 
+    // getting current user
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email };
+      const result = await usersCollection.findOne(filter);
+      console.log(result);
+      res.send(result);
+    });
+
     // Updating a user
 
     app.put("/user/:email", async (req, res) => {
@@ -61,7 +70,12 @@ async function run() {
       const filter = { email };
       const options = { upsert: true };
       const updateDoc = {
-        $set: user,
+        $set: {
+          name: user.username,
+          education: user.education,
+          address: user.address,
+          phone: user.phone,
+        },
       };
 
       const result = await usersCollection.updateOne(
@@ -69,7 +83,7 @@ async function run() {
         updateDoc,
         options
       );
-
+      console.log(result);
       res.send(result);
     });
 
