@@ -33,6 +33,22 @@ async function run() {
 
     const usersCollection = client.db("baiku-manufacture").collection("users");
 
+    // Veryfying Admin
+
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requesterAccount = await usersCollection.findOne({
+        email: requester,
+      });
+
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "forbidden" });
+      }
+    };
+
+    // Veryfying JWT
     function verifyJWT(req, res, next) {
       const authHeader = req.headers.authorization;
       if (!authHeader) {
@@ -193,7 +209,7 @@ async function run() {
     });
 
     // Add A single Product
-    app.post("/product", async (req, res) => {
+    app.post("/product", verifyJWT, verifyAdmin, async (req, res) => {
       const product = req.body;
       console.log(product);
       const result = await productsCollection.insertOne(product);
@@ -205,6 +221,15 @@ async function run() {
     app.get("/products", async (req, res) => {
       const query = {};
       const result = await productsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // Getting a single product by id for delete
+    app.get("/product/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const result = await productsCollection.deleteOne({ _id: ObjectId(id) });
+      // console.log(result);
       res.send(result);
     });
 
