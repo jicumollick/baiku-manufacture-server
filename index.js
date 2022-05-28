@@ -1,4 +1,9 @@
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const {
+  MongoClient,
+  ServerApiVersion,
+  ObjectId,
+  ObjectID,
+} = require("mongodb");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const app = express();
@@ -6,7 +11,7 @@ var cors = require("cors");
 const verify = require("jsonwebtoken/verify");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 
@@ -30,8 +35,26 @@ async function run() {
     const ordersCollection = client
       .db("baiku-manufacture")
       .collection("orders");
+    const paymentsCollection = client
+      .db("baiku-manufacture")
+      .collection("payments");
 
     const usersCollection = client.db("baiku-manufacture").collection("users");
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const order = req.body;
+      const price = order.price;
+      const amount = price * 100;
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({ clientSecret: paymentIntent.client_secret });
+    });
 
     // Veryfying Admin
 
@@ -194,11 +217,37 @@ async function run() {
       }
     });
 
+    app.patch("/order/:id", async (req, res) => {
+      const id = req.params.id;
+      const order = req.body;
+      const filter = { _id: ObjectId(id) };
+
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: order.transactionId,
+        },
+      };
+      const result = await paymentsCollection.insertOne(order);
+      const updatedOrder = await ordersCollection.updateOne(filter, updatedDoc);
+
+      res.send(updatedDoc);
+    });
+
     // add a single order
     app.post("/order", async (req, res) => {
       const order = req.body;
       const result = await ordersCollection.insertOne(order);
       res.send(result);
+    });
+
+    // get a single order by id
+
+    app.get("/order/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const order = await ordersCollection.findOne(query);
+      res.send(order);
     });
 
     //  getting all client reviews
