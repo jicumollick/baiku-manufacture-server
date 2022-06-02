@@ -87,6 +87,7 @@ async function run() {
             return res.status(403).send({ message: "Forbidden Access" });
           }
           req.decoded = decoded;
+          console.log(decoded);
           next();
         }
       );
@@ -103,28 +104,28 @@ async function run() {
 
     // Updating a user
 
-    app.put("/user/:email", async (req, res) => {
-      const email = req.params.email;
-      const user = req.body;
-      const filter = { email };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-          name: user.username,
-          education: user.education,
-          address: user.address,
-          phone: user.phone,
-        },
-      };
+    // app.put("/user/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const user = req.body;
+    //   const filter = { email };
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $set: {
+    //       name: user.username,
+    //       education: user.education,
+    //       address: user.address,
+    //       phone: user.phone,
+    //     },
+    //   };
 
-      const result = await usersCollection.updateOne(
-        filter,
-        updateDoc,
-        options
-      );
-      console.log(result);
-      res.send(result);
-    });
+    //   const result = await usersCollection.updateOne(
+    //     filter,
+    //     updateDoc,
+    //     options
+    //   );
+    //   console.log(result);
+    //   res.send(result);
+    // });
 
     // get all users
 
@@ -166,26 +167,48 @@ async function run() {
     });
 
     // add a user
-
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
       const filter = { email };
       const options = { upsert: true };
-      const updatedDoc = {
+      const updateDoc = {
         $set: user,
       };
+
       const result = await usersCollection.updateOne(
         filter,
-        updatedDoc,
+        updateDoc,
         options
       );
-
       const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1h",
       });
+      console.log(token);
+
       res.send({ result, token });
     });
+
+    // app.put("/user/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const user = req.body;
+    //   const filter = { email };
+    //   const options = { upsert: true };
+    //   const updatedDoc = {
+    //     $set: user,
+    //   };
+    //   const result = await usersCollection.updateOne(
+    //     filter,
+    //     updatedDoc,
+    //     options
+    //   );
+
+    //   const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
+    //     expiresIn: "1h",
+    //   });
+    //   // res.send(token);
+    //   res.send({ result, token });
+    // });
 
     // add a review
     app.post("/review", async (req, res) => {
